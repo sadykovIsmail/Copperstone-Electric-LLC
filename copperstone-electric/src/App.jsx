@@ -46,31 +46,30 @@ function FadeIn({ children, delay = 0, direction = "up", style = {} }) {
   );
 }
 
-// ── Slow image reveal on scroll ───────────────────────────────────
-// Single-div approach — no height inheritance issues
-function RevealImage({ src, position = "center", style = {} }) {
+
+// ── Wipe-from-left reveal ─────────────────────────────────────────
+// The outer div is observed (no clip-path so IntersectionObserver works).
+// The inner div holds the clip-path so it doesn't interfere with detection.
+function WipeLeft({ children, style = {} }) {
   const ref = useRef(null);
   const [vis, setVis] = useState(false);
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } },
-      { threshold: 0.05 }
+      { threshold: 0.1 }
     );
-    obs.observe(el);
+    if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
   return (
-    <div ref={ref} style={{
-      backgroundImage: `url(${src})`,
-      backgroundSize: "cover",
-      backgroundPosition: position,
-      transform: vis ? "scale(1)" : "scale(1.06)",
-      opacity: vis ? 1 : 0,
-      transition: "transform 1.4s cubic-bezier(0.4,0,0.2,1), opacity 1s ease",
-      ...style,
-    }} />
+    <div ref={ref} style={style}>
+      <div style={{
+        clipPath: vis ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+        transition: "clip-path 2.2s cubic-bezier(0.77,0,0.175,1)",
+        width: "100%",
+        height: "100%",
+      }}>{children}</div>
+    </div>
   );
 }
 
@@ -248,11 +247,13 @@ export default function App() {
 
       {/* ── ABOUT — /hero.jpg (electrician portrait, 900×1100) ── */}
       <section id="about" style={{ background: DARK, overflow: "hidden" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: 540 }} className="photo-split">
-          {/* Photo — /hero.jpg */}
-          <div style={{ position: "relative", minHeight: 540 }}>
-            <RevealImage src={`${BASE}hero.jpg`} position="center top" style={{ position: "absolute", inset: 0 }} />
-            <div style={{ position: "absolute", inset: 0, background: "rgba(15,10,6,0.2)", pointerEvents: "none" }} />
+        <div style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", minHeight: 620 }} className="photo-split">
+          {/* Photo — full-bleed wipe from left */}
+          <div style={{ position: "relative", minHeight: 620 }}>
+            <WipeLeft style={{ position: "absolute", inset: 0 }}>
+              <img src={`${BASE}hero.jpg`} alt="Copperstone Electric technician"
+                style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
+            </WipeLeft>
           </div>
           {/* Text */}
           <FadeIn direction="right" style={{ padding: "80px 64px", display: "flex", flexDirection: "column", justifyContent: "center" }} className="about-text">
@@ -417,53 +418,48 @@ export default function App() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background: "#0e0b08", borderTop: "1px solid rgba(255,255,255,0.05)", padding: "48px 32px 24px" }}>
+      <footer style={{ background: "#0e0b08", borderTop: "1px solid rgba(255,255,255,0.05)", padding: "40px 32px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px,1fr))", gap: 32, marginBottom: 36 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                <div style={{ width: 30, height: 30, borderRadius: "50%", background: C, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Zap size={13} color="#fff" />
-                </div>
-                <div>
-                  <div style={{ color: "#fff", fontWeight: 800, fontSize: 11, letterSpacing: 1.5 }}>COPPERSTONE</div>
-                  <div style={{ color: C, fontSize: 9, letterSpacing: 3, fontWeight: 600 }}>ELECTRIC LLC</div>
-                </div>
+          {/* Top row: logo left · nav center · social right */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 24, marginBottom: 32 }}>
+            {/* Logo */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", background: C, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Zap size={13} color="#fff" />
               </div>
-              <p style={{ color: "#4b4540", fontSize: 12, lineHeight: 1.7, margin: "0 0 6px" }}>Licensed. Reliable. Commercial-Grade.</p>
-              <p style={{ color: "#4b4540", fontSize: 12, margin: 0 }}>TECL #XXXXXXX · Texas</p>
-            </div>
-            <div>
-              <p style={{ color: C, fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Services</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {["Commercial Wiring", "Panel Upgrades", "Tenant Build-Outs", "Full Home Rewiring", "EV Charger Install"].map(l => (
-                  <a key={l} href="#services" style={{ color: "#6b6560", fontSize: 13, textDecoration: "none" }}
-                    onMouseEnter={e => e.target.style.color = "#fff"} onMouseLeave={e => e.target.style.color = "#6b6560"}>{l}</a>
-                ))}
+              <div>
+                <div style={{ color: "#fff", fontWeight: 800, fontSize: 11, letterSpacing: 1.5 }}>COPPERSTONE</div>
+                <div style={{ color: C, fontSize: 9, letterSpacing: 3, fontWeight: 600 }}>ELECTRIC LLC</div>
               </div>
             </div>
-            <div>
-              <p style={{ color: C, fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Company</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {["About Us", "Our Services", "Request Quote", "Emergency Service"].map(l => (
-                  <a key={l} href="#" style={{ color: "#6b6560", fontSize: 13, textDecoration: "none" }}
-                    onMouseEnter={e => e.target.style.color = "#fff"} onMouseLeave={e => e.target.style.color = "#6b6560"}>{l}</a>
-                ))}
-              </div>
+            {/* Nav */}
+            <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
+              {["Services", "About", "Testimonials", "Contact"].map(l => (
+                <a key={l} href={`#${l.toLowerCase()}`}
+                  style={{ color: "#6b6560", fontSize: 13, textDecoration: "none", transition: "color 0.2s" }}
+                  onMouseEnter={e => e.target.style.color = "#fff"} onMouseLeave={e => e.target.style.color = "#6b6560"}>{l}</a>
+              ))}
             </div>
-            <div>
-              <p style={{ color: C, fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Contact</p>
-              <p style={{ color: "#6b6560", fontSize: 13, margin: "0 0 6px" }}>(713) 555-0199</p>
-              <p style={{ color: "#6b6560", fontSize: 13, margin: "0 0 6px" }}>info@copperstoneelectric.com</p>
-              <p style={{ color: "#6b6560", fontSize: 13, margin: "0 0 16px" }}>Greater Houston & Texas</p>
-              <a href="#contact" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C + "20", border: `1px solid ${C}40`, color: C, padding: "8px 14px", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
-                Get a Quote <ArrowRight size={11} />
+            {/* Social */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <a href="https://www.facebook.com/share/1AefHaHG1Y/" target="_blank" rel="noopener noreferrer"
+                style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b6560", textDecoration: "none", transition: "background 0.2s, color 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = C + "30"; e.currentTarget.style.color = C; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#6b6560"; }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              </a>
+              <a href="https://www.instagram.com/copperstone.electric?igsh=anc3ZWJvb2pqeDdn&utm_source=qr" target="_blank" rel="noopener noreferrer"
+                style={{ width: 34, height: 34, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b6560", textDecoration: "none", transition: "background 0.2s, color 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = C + "30"; e.currentTarget.style.color = C; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#6b6560"; }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
               </a>
             </div>
           </div>
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 20, display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}>
+          {/* Divider + bottom row */}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 20, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
             <p style={{ color: "#3a3530", fontSize: 12, margin: 0 }}>© 2025 Copperstone Electric LLC. All rights reserved.</p>
-            <p style={{ color: "#3a3530", fontSize: 12, margin: 0 }}>Texas-Based · Licensed · Built on Performance</p>
+            <p style={{ color: "#3a3530", fontSize: 12, margin: 0 }}>Texas · Licensed & Insured</p>
           </div>
         </div>
       </footer>
@@ -475,7 +471,7 @@ export default function App() {
         }
         @media (max-width: 768px) {
           .desktop-nav   { display: none !important; }
-          .split-grid    { grid-template-columns: 1fr !important; }
+.split-grid    { grid-template-columns: 1fr !important; }
           .services-grid { grid-template-columns: 1fr !important; }
           .benefits-grid { grid-template-columns: repeat(2,1fr) !important; }
           .photo-split   { grid-template-columns: 1fr !important; }
