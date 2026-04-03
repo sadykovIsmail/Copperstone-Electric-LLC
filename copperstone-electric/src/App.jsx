@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import emailjs from "@emailjs/browser";
 import {
-  Zap, Phone, Mail, MapPin, Menu, X, Star,
+  Phone, Mail, MapPin, Menu, X, Star,
   ArrowRight, CheckCircle, Building2, Home, Shield,
 } from "lucide-react";
 
@@ -9,7 +10,7 @@ const BASE   = import.meta.env.BASE_URL;  // "/" locally · "/Copperstone-Electr
 
 const C      = "#C87533";
 const DARK   = "#1A1814";
-const BG     = "#F5F0E8";
+const BG     = "#EDE8D8";
 const GRAY   = "#7A7268";
 const BORDER = "#D4CEC5";
 
@@ -79,6 +80,8 @@ export default function App() {
   const [scrolled, setScrolled]   = useState(false);
   const [formData, setFormData]   = useState({ name: "", email: "", phone: "", service: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors]       = useState({});
+  const [sending, setSending]     = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -86,9 +89,41 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const formatPhone = (val) => {
+    const d = val.replace(/\D/g, "").slice(0, 10);
+    if (d.length <= 3) return d.length ? `(${d}` : "";
+    if (d.length <= 6) return `(${d.slice(0,3)}) ${d.slice(3)}`;
+    return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  };
+
   const handleSubmit = () => {
-    if (!formData.name || !formData.email || !formData.service) return;
-    setSubmitted(true);
+    const errs = {};
+    if (!formData.name.trim()) errs.name = "Name is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = "Enter a valid email address";
+    if (!formData.service) errs.service = "Please select a service";
+    if (formData.message.trim().length < 20) errs.message = "Please describe your project (at least 20 characters)";
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    setErrors({});
+    setSending(true);
+    emailjs.send(
+      "service_w8bxjr8",
+      "template_bm294tt",
+      {
+        from_name:    formData.name,
+        from_email:   formData.email,
+        phone:        formData.phone || "—",
+        service:      formData.service,
+        message:      formData.message,
+        to_email:     "ghvh8176@gmail.com",
+      },
+      "P8MyjbzxmohKKCxDe"
+    ).then(() => {
+      setSending(false);
+      setSubmitted(true);
+    }).catch(() => {
+      setSending(false);
+      setErrors({ submit: "Failed to send. Please try again or call us directly." });
+    });
   };
 
   return (
@@ -104,21 +139,33 @@ export default function App() {
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 32px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
           <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-            <div style={{ width: 34, height: 34, borderRadius: "50%", background: C, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Zap size={15} color="#fff" />
-            </div>
+            <img src={`${BASE}favicon.svg`} alt="" width="34" height="34" />
             <div style={{ lineHeight: 1.15 }}>
               <div style={{ color: scrolled ? DARK : "#fff", fontWeight: 800, fontSize: 12, letterSpacing: 1.5, transition: "color 0.3s" }}>COPPERSTONE</div>
               <div style={{ color: C, fontSize: 9, letterSpacing: 3, fontWeight: 600 }}>ELECTRIC LLC</div>
             </div>
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: 36 }} className="desktop-nav">
-            {["Services", "About", "Testimonials", "Contact"].map(l => (
+            {["Services", "Projects", "About", "Testimonials", "Contact"].map(l => (
               <a key={l} href={`#${l.toLowerCase()}`}
                 style={{ color: scrolled ? GRAY : "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 500, textDecoration: "none", transition: "color 0.3s" }}
                 onMouseEnter={e => e.target.style.color = scrolled ? DARK : "#fff"}
                 onMouseLeave={e => e.target.style.color = scrolled ? GRAY : "rgba(255,255,255,0.85)"}>{l}</a>
             ))}
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <a href="https://www.facebook.com/share/1AefHaHG1Y/" target="_blank" rel="noopener noreferrer"
+                style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: scrolled ? GRAY : "rgba(255,255,255,0.75)", textDecoration: "none", transition: "background 0.2s, color 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = C + "30"; e.currentTarget.style.color = C; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = scrolled ? GRAY : "rgba(255,255,255,0.75)"; }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+              </a>
+              <a href="https://www.instagram.com/copperstone.electric?igsh=anc3ZWJvb2pqeDdn&utm_source=qr" target="_blank" rel="noopener noreferrer"
+                style={{ width: 30, height: 30, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: scrolled ? GRAY : "rgba(255,255,255,0.75)", textDecoration: "none", transition: "background 0.2s, color 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = C + "30"; e.currentTarget.style.color = C; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = scrolled ? GRAY : "rgba(255,255,255,0.75)"; }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              </a>
+            </div>
             <a href="#contact" style={{ background: C, color: "#fff", padding: "9px 22px", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>Get a Quote</a>
           </div>
           <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", color: scrolled ? DARK : "#fff", cursor: "pointer" }} className="mobile-menu-btn">
@@ -127,7 +174,7 @@ export default function App() {
         </div>
         {menuOpen && (
           <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, padding: "16px 32px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-            {["Services", "About", "Testimonials", "Contact"].map(l => (
+            {["Services", "Projects", "About", "Testimonials", "Contact"].map(l => (
               <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setMenuOpen(false)}
                 style={{ color: DARK, fontSize: 15, fontWeight: 500, textDecoration: "none" }}>{l}</a>
             ))}
@@ -154,36 +201,26 @@ export default function App() {
             </div>
           </FadeIn>
           <FadeIn delay={220}>
-            <h1 style={{ fontSize: "clamp(2.4rem,5.5vw,4.2rem)", fontWeight: 900, lineHeight: 1.1, color: "#fff", margin: "0 0 16px", maxWidth: 580 }}>
+            <h1 style={{ fontSize: "clamp(2.6rem,6vw,4.8rem)", fontWeight: 900, lineHeight: 1.05, color: "#fff", margin: "0 0 32px", maxWidth: 620 }}>
               Commercial Electrical.<br />
               <span style={{ color: C }}>No Small Jobs.</span>
             </h1>
           </FadeIn>
-          <FadeIn delay={340}>
-            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 15, maxWidth: 400, lineHeight: 1.75, margin: "0 0 32px" }}>
-              TECL-licensed Texas contractor. Commercial builds, panel upgrades, and large-scale residential — done to code, on schedule.
-            </p>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 48 }}>
-              <a href="tel:+17135550199" style={{ background: C, color: "#fff", padding: "15px 28px", borderRadius: 6, fontWeight: 800, fontSize: 15, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 9, boxShadow: `0 4px 20px ${C}55` }}>
+          <FadeIn delay={320}>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <a href="tel:+17135550199" style={{ background: C, color: "#fff", padding: "16px 30px", borderRadius: 6, fontWeight: 800, fontSize: 15, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 9, boxShadow: `0 4px 20px ${C}55` }}>
                 <Phone size={15} /> Call Now — (713) 555-0199
               </a>
-              <a href="#contact" style={{ border: "1px solid rgba(255,255,255,0.25)", color: "#fff", padding: "15px 24px", borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <a href="#contact" style={{ border: "1px solid rgba(255,255,255,0.25)", color: "#fff", padding: "16px 26px", borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
                 Get a Quote <ArrowRight size={13} />
               </a>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
-              {["Licensed & Insured", "TECL Certified", "NEC Compliant", "24/7 Emergency"].map(b => (
-                <div key={b} style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,0.55)", fontSize: 12 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: C }} /> {b}
-                </div>
-              ))}
             </div>
           </FadeIn>
         </div>
       </section>
 
       {/* ── BENEFITS ── */}
-      <section style={{ background: DARK, padding: "64px 32px" }}>
+      <section style={{ background: BG, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: "64px 32px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 40 }} className="benefits-grid">
           {[
             { title: "TECL Licensed",         desc: "State-licensed, fully insured, code-compliant. Every job." },
@@ -193,8 +230,8 @@ export default function App() {
           ].map(({ title, desc }, i) => (
             <FadeIn key={title} delay={i * 100}>
               <div style={{ width: 40, height: 2, background: C, marginBottom: 20 }} />
-              <h3 style={{ color: "#fff", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{title}</h3>
-              <p style={{ color: "#7A7060", fontSize: 13, lineHeight: 1.75, margin: 0 }}>{desc}</p>
+              <h3 style={{ color: DARK, fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{title}</h3>
+              <p style={{ color: GRAY, fontSize: 13, lineHeight: 1.75, margin: 0 }}>{desc}</p>
             </FadeIn>
           ))}
         </div>
@@ -245,8 +282,50 @@ export default function App() {
         </div>
       </section>
 
+      {/* ── PROJECTS ── */}
+      <section id="projects" style={{ background: DARK, padding: "96px 32px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 48 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                  <div style={{ width: 36, height: 1, background: C }} />
+                  <span style={{ color: C, fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>Our Work</span>
+                </div>
+                <h2 style={{ fontSize: "clamp(1.8rem,3.5vw,2.4rem)", fontWeight: 900, color: "#fff", margin: 0 }}>Recent Projects</h2>
+              </div>
+              <a href="#contact" style={{ display: "inline-flex", alignItems: "center", gap: 7, color: C, fontSize: 13, fontWeight: 700, textDecoration: "none", letterSpacing: 0.3 }}>
+                Start Your Project <ArrowRight size={13} />
+              </a>
+            </div>
+          </FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }} className="services-grid">
+            {[
+              { title: "Commercial Panel Upgrade",  type: "Industrial · Houston, TX" },
+              { title: "Tenant Build-Out Wiring",   type: "Retail · Dallas, TX" },
+              { title: "Full Facility Rewire",       type: "Commercial · Austin, TX" },
+            ].map((p, i) => (
+              <FadeIn key={p.title} delay={i * 80}>
+                <div style={{ borderRadius: 10, overflow: "hidden", background: "#1a1510", border: "1px solid rgba(255,255,255,0.07)", aspectRatio: "4/3", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 24, position: "relative" }}>
+                  <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${C}18 0%, transparent 60%)` }} />
+                  <div style={{ position: "relative" }}>
+                    <p style={{ color: C, fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 6px" }}>{p.type}</p>
+                    <h3 style={{ color: "#fff", fontWeight: 700, fontSize: 15, margin: 0 }}>{p.title}</h3>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+          <FadeIn delay={200}>
+            <p style={{ color: "#4b4540", fontSize: 13, textAlign: "center", marginTop: 32 }}>
+              Add your project photos to <code style={{ color: C, fontSize: 12 }}>public/</code> — drop images named <code style={{ color: C, fontSize: 12 }}>project1.jpg</code> through <code style={{ color: C, fontSize: 12 }}>project3.jpg</code>
+            </p>
+          </FadeIn>
+        </div>
+      </section>
+
       {/* ── ABOUT — /hero.jpg (electrician portrait, 900×1100) ── */}
-      <section id="about" style={{ background: DARK, overflow: "hidden" }}>
+      <section id="about" style={{ background: BG, overflow: "hidden" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", minHeight: 620 }} className="photo-split">
           {/* Photo — full-bleed wipe from left */}
           <div style={{ position: "relative", minHeight: 620 }}>
@@ -261,16 +340,16 @@ export default function App() {
               <div style={{ width: 36, height: 1, background: C }} />
               <span style={{ color: C, fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>About Us</span>
             </div>
-            <h2 style={{ fontSize: "clamp(1.8rem,3vw,2.6rem)", fontWeight: 900, color: "#fff", lineHeight: 1.15, marginBottom: 24 }}>
+            <h2 style={{ fontSize: "clamp(1.8rem,3vw,2.6rem)", fontWeight: 900, color: DARK, lineHeight: 1.15, marginBottom: 24 }}>
               We Only Take<br />
               <span style={{ color: C }}>Jobs We Can Nail.</span>
             </h2>
-            <p style={{ color: "#9A9088", fontSize: 15, lineHeight: 1.85, marginBottom: 36 }}>
+            <p style={{ color: GRAY, fontSize: 15, lineHeight: 1.85, marginBottom: 36 }}>
               Texas-based. TECL licensed. We work with GCs, property managers, and developers who need electrical done right — on schedule, to code, built to last. If it's not the right fit, we'll tell you upfront.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 36 }}>
               {["TECL Licensed", "Fully Insured", "NEC Compliant", "Texas-Based", "Commercial Specialist", "24/7 Emergency"].map(b => (
-                <div key={b} style={{ display: "flex", alignItems: "center", gap: 8, color: "#9A9088", fontSize: 13 }}>
+                <div key={b} style={{ display: "flex", alignItems: "center", gap: 8, color: GRAY, fontSize: 13 }}>
                   <div style={{ width: 5, height: 5, borderRadius: "50%", background: C, flexShrink: 0 }} /> {b}
                 </div>
               ))}
@@ -318,7 +397,7 @@ export default function App() {
       </section>
 
       {/* ── CONTACT ── */}
-      <section id="contact" style={{ background: DARK, padding: "96px 32px" }}>
+      <section id="contact" style={{ background: BG, padding: "96px 32px", borderTop: `1px solid ${BORDER}` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: 72, alignItems: "start" }} className="split-grid">
             <FadeIn direction="left">
@@ -326,11 +405,11 @@ export default function App() {
                 <div style={{ width: 36, height: 1, background: C }} />
                 <span style={{ color: C, fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>Get in Touch</span>
               </div>
-              <h2 style={{ fontSize: "clamp(1.8rem,3vw,2.6rem)", fontWeight: 900, color: "#fff", lineHeight: 1.15, marginBottom: 12 }}>
+              <h2 style={{ fontSize: "clamp(1.8rem,3vw,2.6rem)", fontWeight: 900, color: DARK, lineHeight: 1.15, marginBottom: 12 }}>
                 Ready to Start?<br />
                 <span style={{ color: C }}>Call or Send a Quote.</span>
               </h2>
-              <p style={{ color: "#7A7060", fontSize: 14, lineHeight: 1.8, marginBottom: 28 }}>
+              <p style={{ color: GRAY, fontSize: 14, lineHeight: 1.8, marginBottom: 28 }}>
                 Commercial clients and GCs preferred. We respond fast.
               </p>
               {/* Primary phone CTA */}
@@ -353,16 +432,30 @@ export default function App() {
                       <Icon size={15} color={C} />
                     </div>
                     <div>
-                      <p style={{ color: "#fff", fontWeight: 600, fontSize: 14, margin: "0 0 2px" }}>{value}</p>
-                      <p style={{ color: "#7A7060", fontSize: 12, margin: 0 }}>{sub}</p>
+                      <p style={{ color: DARK, fontWeight: 600, fontSize: 14, margin: "0 0 2px" }}>{value}</p>
+                      <p style={{ color: GRAY, fontSize: 12, margin: 0 }}>{sub}</p>
                     </div>
                   </div>
                 ))}
               </div>
+              {/* Social links */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 28, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
+                <span style={{ color: GRAY, fontSize: 12, fontWeight: 600 }}>Follow us:</span>
+                <a href="https://www.facebook.com/share/1AefHaHG1Y/" target="_blank" rel="noopener noreferrer"
+                  style={{ width: 36, height: 36, borderRadius: "50%", background: C + "15", border: `1px solid ${C}40`, display: "flex", alignItems: "center", justifyContent: "center", color: C, textDecoration: "none", transition: "background 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = C + "30"} onMouseLeave={e => e.currentTarget.style.background = C + "15"}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                </a>
+                <a href="https://www.instagram.com/copperstone.electric?igsh=anc3ZWJvb2pqeDdn&utm_source=qr" target="_blank" rel="noopener noreferrer"
+                  style={{ width: 36, height: 36, borderRadius: "50%", background: C + "15", border: `1px solid ${C}40`, display: "flex", alignItems: "center", justifyContent: "center", color: C, textDecoration: "none", transition: "background 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = C + "30"} onMouseLeave={e => e.currentTarget.style.background = C + "15"}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                </a>
+              </div>
             </FadeIn>
 
             <FadeIn direction="right">
-              <div style={{ background: "#fff", borderRadius: 12, padding: "40px 36px" }}>
+              <div style={{ background: "#fff", borderRadius: 12, padding: "40px 36px", border: `1px solid ${BORDER}` }}>
                 {submitted ? (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 14, padding: "48px 0" }}>
                     <CheckCircle size={48} color={C} />
@@ -373,20 +466,35 @@ export default function App() {
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                     <h3 style={{ color: DARK, fontWeight: 800, fontSize: 18, margin: "0 0 4px" }}>Request a Quote</h3>
-                    {[
-                      { id: "name",  label: "Full Name", type: "text",  placeholder: "Your Name" },
-                      { id: "email", label: "Email",     type: "email", placeholder: "you@company.com" },
-                      { id: "phone", label: "Phone",     type: "tel",   placeholder: "(713) 555-0000" },
-                    ].map(f => (
-                      <div key={f.id}>
-                        <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: GRAY, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>{f.label}</label>
-                        <input type={f.type} placeholder={f.placeholder} value={formData[f.id]}
-                          onChange={e => setFormData({ ...formData, [f.id]: e.target.value })} style={inp} />
-                      </div>
-                    ))}
+                    {/* Name */}
+                    <div>
+                      <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: GRAY, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>Full Name</label>
+                      <input type="text" placeholder="Your Name" maxLength={50} value={formData.name}
+                        onChange={e => { setFormData({ ...formData, name: e.target.value }); setErrors(p => ({ ...p, name: "" })); }}
+                        style={{ ...inp, borderColor: errors.name ? "#e05a5a" : BORDER }} />
+                      {errors.name && <p style={{ color: "#e05a5a", fontSize: 11, margin: "4px 0 0" }}>{errors.name}</p>}
+                    </div>
+                    {/* Email */}
+                    <div>
+                      <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: GRAY, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>Email</label>
+                      <input type="email" placeholder="you@company.com" value={formData.email}
+                        onChange={e => { setFormData({ ...formData, email: e.target.value }); setErrors(p => ({ ...p, email: "" })); }}
+                        style={{ ...inp, borderColor: errors.email ? "#e05a5a" : BORDER }} />
+                      {errors.email && <p style={{ color: "#e05a5a", fontSize: 11, margin: "4px 0 0" }}>{errors.email}</p>}
+                    </div>
+                    {/* Phone */}
+                    <div>
+                      <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: GRAY, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>Phone</label>
+                      <input type="tel" placeholder="(713) 555-0000" value={formData.phone}
+                        onChange={e => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                        style={inp} />
+                    </div>
+                    {/* Service */}
                     <div>
                       <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: GRAY, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>Service Needed</label>
-                      <select value={formData.service} onChange={e => setFormData({ ...formData, service: e.target.value })} style={inp}>
+                      <select value={formData.service}
+                        onChange={e => { setFormData({ ...formData, service: e.target.value }); setErrors(p => ({ ...p, service: "" })); }}
+                        style={{ ...inp, borderColor: errors.service ? "#e05a5a" : BORDER }}>
                         <option value="">Select a service…</option>
                         <option>Commercial New Construction</option>
                         <option>Panel / Service Upgrade</option>
@@ -398,16 +506,21 @@ export default function App() {
                         <option>EV Charger Installation</option>
                         <option>Other</option>
                       </select>
+                      {errors.service && <p style={{ color: "#e05a5a", fontSize: 11, margin: "4px 0 0" }}>{errors.service}</p>}
                     </div>
+                    {/* Project Details */}
                     <div>
                       <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: GRAY, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>Project Details</label>
-                      <textarea rows={4} placeholder="Describe your project — scope, timeline, location."
-                        value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })}
-                        style={{ ...inp, resize: "vertical", fontFamily: "inherit" }} />
+                      <textarea rows={6} placeholder="Describe your project — scope, timeline, location. (min. 20 characters)"
+                        value={formData.message}
+                        onChange={e => { setFormData({ ...formData, message: e.target.value }); setErrors(p => ({ ...p, message: "" })); }}
+                        style={{ ...inp, resize: "vertical", fontFamily: "inherit", borderColor: errors.message ? "#e05a5a" : BORDER }} />
+                      {errors.message && <p style={{ color: "#e05a5a", fontSize: 11, margin: "4px 0 0" }}>{errors.message}</p>}
                     </div>
-                    <button onClick={handleSubmit}
-                      style={{ background: C, color: "#fff", border: "none", borderRadius: 6, padding: "15px 0", fontWeight: 800, fontSize: 15, cursor: "pointer", boxShadow: `0 4px 18px ${C}50`, letterSpacing: 0.3 }}>
-                      Send My Quote Request →
+                    {errors.submit && <p style={{ color: "#e05a5a", fontSize: 12, margin: "0 0 4px" }}>{errors.submit}</p>}
+                    <button onClick={handleSubmit} disabled={sending}
+                      style={{ background: sending ? GRAY : C, color: "#fff", border: "none", borderRadius: 6, padding: "15px 0", fontWeight: 800, fontSize: 15, cursor: sending ? "not-allowed" : "pointer", boxShadow: sending ? "none" : `0 4px 18px ${C}50`, letterSpacing: 0.3, transition: "background 0.2s" }}>
+                      {sending ? "Sending…" : "Send My Quote Request →"}
                     </button>
                   </div>
                 )}
@@ -424,9 +537,7 @@ export default function App() {
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 24, marginBottom: 32 }}>
             {/* Logo */}
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", background: C, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Zap size={13} color="#fff" />
-              </div>
+              <img src={`${BASE}favicon.svg`} alt="" width="30" height="30" />
               <div>
                 <div style={{ color: "#fff", fontWeight: 800, fontSize: 11, letterSpacing: 1.5 }}>COPPERSTONE</div>
                 <div style={{ color: C, fontSize: 9, letterSpacing: 3, fontWeight: 600 }}>ELECTRIC LLC</div>
@@ -434,7 +545,7 @@ export default function App() {
             </div>
             {/* Nav */}
             <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
-              {["Services", "About", "Testimonials", "Contact"].map(l => (
+              {["Services", "Projects", "About", "Testimonials", "Contact"].map(l => (
                 <a key={l} href={`#${l.toLowerCase()}`}
                   style={{ color: "#6b6560", fontSize: 13, textDecoration: "none", transition: "color 0.2s" }}
                   onMouseEnter={e => e.target.style.color = "#fff"} onMouseLeave={e => e.target.style.color = "#6b6560"}>{l}</a>
