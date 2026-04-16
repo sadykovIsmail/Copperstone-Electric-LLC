@@ -202,8 +202,8 @@ export default function App() {
           </FadeIn>
           <FadeIn delay={220}>
             <h1 style={{ fontSize: "clamp(2.6rem,6vw,4.8rem)", fontWeight: 900, lineHeight: 1.05, color: "#fff", margin: "0 0 32px", maxWidth: 620 }}>
-              Commercial Electrical Done Right.<br />
-              <span style={{ color: C }}>First Time.</span>
+              Powering Commercial<br />
+              <span style={{ color: C }}>Projects Across Texas</span>
             </h1>
           </FadeIn>
           <FadeIn delay={280}>
