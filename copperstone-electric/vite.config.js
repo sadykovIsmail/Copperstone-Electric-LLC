@@ -3,5 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/Copperstone-Electric-LLC/', // MUST match your repo name exactly
+  base: '/', // Ensure this is just a slash for custom domains
 })

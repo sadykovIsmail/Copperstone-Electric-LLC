@@ -1,2 +1,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0a0e14; }
+body {
+	background: #D8C39B;
+	color: #070605;
+	font-family: "Libre Baskerville", "Times New Roman", serif;
+}
