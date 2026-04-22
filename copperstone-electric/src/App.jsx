@@ -216,8 +216,8 @@ export default function App() {
               <a href="#contact" style={{ background: C, color: "#fff", padding: "16px 28px", borderRadius: 6, fontWeight: 800, fontSize: 15, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 9, boxShadow: `0 4px 20px ${C}55` }}>
                 Request a Quote <ArrowRight size={14} />
               </a>
-              <a href="tel:+17135550199" style={{ border: "1px solid rgba(255,255,255,0.25)", color: "#fff", padding: "14px 22px", borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Phone size={13} /> (713) 555-0199
+              <a href="tel:+14159520294" style={{ border: "1px solid rgba(255,255,255,0.25)", color: "#fff", padding: "14px 22px", borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <Phone size={13} /> (415) 952-0294
               </a>
             </div>
           </FadeIn>
@@ -426,13 +426,13 @@ export default function App() {
                 Tell us about your project scope, timeline, and location. We respond quickly with clear next steps.
               </p>
               {/* Primary phone CTA */}
-              <a href="tel:+17135550199" style={{ display: "flex", alignItems: "center", gap: 14, background: C, borderRadius: 8, padding: "18px 22px", textDecoration: "none", marginBottom: 28 }}>
+              <a href="tel:+14159520294" style={{ display: "flex", alignItems: "center", gap: 14, background: C, borderRadius: 8, padding: "18px 22px", textDecoration: "none", marginBottom: 28 }}>
                 <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Phone size={18} color="#fff" />
                 </div>
                 <div>
                   <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", margin: "0 0 2px" }}>Call Now · 24/7</p>
-                  <p style={{ color: "#fff", fontWeight: 800, fontSize: 20, margin: 0 }}>(713) 555-0199</p>
+                  <p style={{ color: "#fff", fontWeight: 800, fontSize: 20, margin: 0 }}>(415) 952-0294</p>
                 </div>
               </a>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
