@@ -18,6 +18,9 @@ import {
   SOCIAL_LINKS,
   TESTIMONIALS,
 } from "./content/siteContent";
+import { PUBLISH_EVENT, readPublishedSiteContent, savePublishedSiteContent } from "./lib/siteContentApi";
+import { readStoredSiteContentWithFallback } from "./lib/siteContentStorage";
+import { createDefaultSiteContent } from "./lib/siteContentData";
 import { fetchFeaturedProjects } from "./lib/projects";
 
 // Correct image path for both dev and GitHub Pages deployment
@@ -94,10 +97,25 @@ function Home() {
   const [menuOpen, setMenuOpen]   = useState(false);
   const [scrolled, setScrolled]   = useState(false);
   const [projects, setProjects]   = useState(PROJECTS);
+  const previewDraftMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("previewDraft") === "1";
+  const [siteDraft, setSiteDraft]  = useState(() => createDefaultSiteContent());
   const [formData, setFormData]   = useState({ name: "", email: "", phone: "", service: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors]       = useState({});
   const [sending, setSending]     = useState(false);
+
+  const heroContent = siteDraft.hero;
+  const aboutContent = siteDraft.about;
+  const contactContent = siteDraft.contact;
+  const navLinks = siteDraft.navLinks;
+  const socialLinks = siteDraft.socialLinks;
+  const businessInfo = siteDraft.businessInfo;
+  const benefits = siteDraft.benefits;
+  const services = siteDraft.services;
+  const projectsNote = siteDraft.projectsNote;
+  const testimonials = siteDraft.testimonials;
+  const contactMethods = siteDraft.contactMethods;
+  const serviceOptions = siteDraft.serviceOptions;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -126,6 +144,49 @@ function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    let ignore = false;
+
+    const loadSiteContent = async () => {
+      if (previewDraftMode) {
+        setSiteDraft(readStoredSiteContentWithFallback(createDefaultSiteContent()));
+        return;
+      }
+
+      const publishedContent = await readPublishedSiteContent();
+      if (!ignore) {
+        setSiteDraft(publishedContent);
+      }
+    };
+
+    loadSiteContent();
+
+    return () => {
+      ignore = true;
+    };
+  }, [previewDraftMode]);
+
+  useEffect(() => {
+    const syncPreviewDraft = () => setSiteDraft(readStoredSiteContentWithFallback(createDefaultSiteContent()));
+    const syncPublishedContent = async () => {
+      const publishedContent = await readPublishedSiteContent();
+      setSiteDraft(publishedContent);
+    };
+
+    if (previewDraftMode) {
+      window.addEventListener("storage", syncPreviewDraft);
+      window.addEventListener("copperstone-site-content-change", syncPreviewDraft);
+    } else {
+      window.addEventListener(PUBLISH_EVENT, syncPublishedContent);
+    }
+
+    return () => {
+      window.removeEventListener("storage", syncPreviewDraft);
+      window.removeEventListener("copperstone-site-content-change", syncPreviewDraft);
+      window.removeEventListener(PUBLISH_EVENT, syncPublishedContent);
+    };
+  }, [previewDraftMode]);
+
   const formatPhone = (val) => {
     const d = val.replace(/\D/g, "").slice(0, 10);
     if (d.length <= 3) return d.length ? `(${d}` : "";
@@ -151,7 +212,7 @@ function Home() {
         phone:        formData.phone || "-",
         service:      formData.service,
         message:      formData.message,
-        to_email:     BUSINESS_INFO.email,
+        to_email:     businessInfo.email,
       },
       "P8MyjbzxmohKKCxDe"
     ).then(() => {
@@ -178,25 +239,25 @@ function Home() {
           <a href="#" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
             <img src={`${BASE}favicon.svg`} alt="" width="34" height="34" />
             <div style={{ lineHeight: 1.15 }}>
-              <div style={{ color: scrolled ? DARK : "#fff", fontWeight: 800, fontSize: 14, letterSpacing: 1.5, transition: "color 0.3s" }}>{BUSINESS_INFO.brandPrimary}</div>
-              <div style={{ color: C, fontSize: 12, letterSpacing: 3, fontWeight: 700 }}>{BUSINESS_INFO.brandSecondary}</div>
+              <div style={{ color: scrolled ? DARK : "#fff", fontWeight: 800, fontSize: 14, letterSpacing: 1.5, transition: "color 0.3s" }}>{businessInfo.brandPrimary}</div>
+              <div style={{ color: C, fontSize: 12, letterSpacing: 3, fontWeight: 700 }}>{businessInfo.brandSecondary}</div>
             </div>
           </a>
           <div style={{ display: "flex", alignItems: "center", gap: 36 }} className="desktop-nav">
-            {NAV_LINKS.map(l => (
+            {navLinks.map(l => (
               <a key={l} href={`#${l.toLowerCase()}`}
                 style={{ color: scrolled ? GRAY : "rgba(255,255,255,0.85)", fontSize: 16, fontWeight: 500, textDecoration: "none", transition: "color 0.3s" }}
                 onMouseEnter={e => e.target.style.color = scrolled ? DARK : "#fff"}
                 onMouseLeave={e => e.target.style.color = scrolled ? GRAY : "rgba(255,255,255,0.85)"}>{l}</a>
             ))}
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer"
+              <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"
                 style={{ width: 30, height: 30, borderRadius: "50%", background: "#1877F2", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none", transition: "background 0.2s, transform 0.2s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "#0f63d8"; e.currentTarget.style.transform = "translateY(-1px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "#1877F2"; e.currentTarget.style.transform = "none"; }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
               </a>
-              <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer"
+              <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"
                 style={{ width: 30, height: 30, borderRadius: "50%", background: "#E1306C", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none", transition: "background 0.2s, transform 0.2s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "#c81e59"; e.currentTarget.style.transform = "translateY(-1px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "#E1306C"; e.currentTarget.style.transform = "none"; }}>
@@ -211,7 +272,7 @@ function Home() {
         </div>
         {menuOpen && (
           <div style={{ background: "#fff", borderTop: `1px solid ${BORDER}`, padding: "16px 32px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-            {NAV_LINKS.map(l => (
+            {navLinks.map(l => (
               <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setMenuOpen(false)}
                 style={{ color: DARK, fontSize: 17, fontWeight: 500, textDecoration: "none" }}>{l}</a>
             ))}
@@ -234,27 +295,27 @@ function Home() {
           <FadeIn delay={100}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
               <div style={{ width: 40, height: 1, background: C }} />
-              <span style={{ color: C, fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>Licensed Electrical Contractor - Texas</span>
+              <span style={{ color: C, fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>{heroContent.eyebrow}</span>
             </div>
           </FadeIn>
           <FadeIn delay={220}>
             <h1 style={{ fontSize: "clamp(2.6rem,6vw,4.8rem)", fontWeight: 900, lineHeight: 1.05, color: "#fff", margin: "0 0 32px", maxWidth: 620 }}>
-              {HERO_CONTENT.titleLineOne}<br />
-              <span style={{ color: C }}>{HERO_CONTENT.titleAccent}</span>
+              {heroContent.titleLineOne}<br />
+              <span style={{ color: C }}>{heroContent.titleAccent}</span>
             </h1>
           </FadeIn>
           <FadeIn delay={280}>
             <p style={{ color: "rgba(255,255,255,0.84)", fontSize: 15, lineHeight: 1.8, maxWidth: 680, margin: "0 0 28px", fontWeight: 600 }}>
-              {HERO_CONTENT.body}
+              {heroContent.body}
             </p>
           </FadeIn>
           <FadeIn delay={320}>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <a href="#contact" style={{ background: C, color: "#fff", padding: "16px 28px", borderRadius: 6, fontWeight: 800, fontSize: 15, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 9, boxShadow: `0 4px 20px ${C}55` }}>
-                {HERO_CONTENT.primaryCta} <ArrowRight size={14} />
+                {heroContent.primaryCta} <ArrowRight size={14} />
               </a>
-              <a href={BUSINESS_INFO.phoneHref} style={{ border: "1px solid rgba(255,255,255,0.25)", color: "#fff", padding: "14px 22px", borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <Phone size={13} /> {HERO_CONTENT.secondaryCta}
+              <a href={businessInfo.phoneHref} style={{ border: "1px solid rgba(255,255,255,0.25)", color: "#fff", padding: "14px 22px", borderRadius: 6, fontWeight: 600, fontSize: 14, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <Phone size={13} /> {heroContent.secondaryCta}
               </a>
             </div>
           </FadeIn>
@@ -264,7 +325,7 @@ function Home() {
       {/* â”€â”€ BENEFITS â”€â”€ */}
       <section style={{ background: BG, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: "64px 32px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 40 }} className="benefits-grid">
-          {BENEFITS.map(({ title, desc }, i) => (
+          {benefits.map(({ title, desc }, i) => (
             <FadeIn key={title} delay={i * 100}>
               <div style={{ width: 40, height: 2, background: C, marginBottom: 20 }} />
               <h3 style={{ color: DARK, fontWeight: 800, fontSize: 17, marginBottom: 10 }}>{title}</h3>
@@ -288,7 +349,7 @@ function Home() {
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }} className="services-grid">
-            {SERVICES.map((s, i) => (
+            {services.map((s, i) => (
               <FadeIn key={s.title} delay={i * 130}>
                 <ServiceCard {...s} />
               </FadeIn>
@@ -339,7 +400,7 @@ function Home() {
           </div>
           <FadeIn delay={200}>
             <p style={{ color: "#4b4540", fontSize: 14, textAlign: "center", marginTop: 32 }}>
-              {PROJECTS_NOTE}
+              {projectsNote}
             </p>
           </FadeIn>
         </div>
@@ -359,20 +420,20 @@ function Home() {
           <FadeIn direction="right" style={{ padding: "80px 64px", display: "flex", flexDirection: "column", justifyContent: "center" }} className="about-text">
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
               <div style={{ width: 36, height: 1, background: C }} />
-              <span style={{ color: C, fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>{ABOUT_CONTENT.eyebrow}</span>
+              <span style={{ color: C, fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>{aboutContent.eyebrow}</span>
             </div>
             <h2 style={{ fontSize: "clamp(1.8rem,3vw,2.6rem)", fontWeight: 900, color: DARK, lineHeight: 1.15, marginBottom: 24 }}>
-              {ABOUT_CONTENT.titleLineOne}<br />
-              <span style={{ color: C }}>{ABOUT_CONTENT.titleAccent}</span>
+              {aboutContent.titleLineOne}<br />
+              <span style={{ color: C }}>{aboutContent.titleAccent}</span>
             </h2>
             <p style={{ color: GRAY, fontSize: 15, lineHeight: 1.85, marginBottom: 36 }}>
-              {ABOUT_CONTENT.body}
+              {aboutContent.body}
             </p>
             <p style={{ color: DARK, fontSize: 14, lineHeight: 1.7, fontWeight: 700, marginBottom: 24 }}>
-              {ABOUT_CONTENT.emphasis}
+              {aboutContent.emphasis}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 36 }}>
-              {ABOUT_CONTENT.bullets.map(b => (
+              {aboutContent.bullets.map(b => (
                 <div key={b} style={{ display: "flex", alignItems: "center", gap: 8, color: GRAY, fontSize: 15 }}>
                   <div style={{ width: 5, height: 5, borderRadius: "50%", background: C, flexShrink: 0 }} />
                   {b}
@@ -380,7 +441,7 @@ function Home() {
               ))}
             </div>
             <a href="#contact" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C, color: "#fff", padding: "13px 26px", borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: "none", alignSelf: "flex-start" }}>
-              {ABOUT_CONTENT.cta} <ArrowRight size={14} />
+              {aboutContent.cta} <ArrowRight size={14} />
             </a>
           </FadeIn>
         </div>
@@ -406,7 +467,7 @@ function Home() {
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 24 }} className="services-grid">
-            {TESTIMONIALS.map((t, i) => (
+            {testimonials.map((t, i) => (
               <FadeIn key={t.name} delay={i * 130}>
                 <TestimonialCard {...t} />
               </FadeIn>
@@ -422,14 +483,14 @@ function Home() {
             <FadeIn direction="left">
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
                 <div style={{ width: 36, height: 1, background: C }} />
-                <span style={{ color: C, fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>{CONTACT_CONTENT.eyebrow}</span>
+                <span style={{ color: C, fontSize: 12, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase" }}>{contactContent.eyebrow}</span>
               </div>
               <h2 style={{ fontSize: "clamp(1.8rem,3vw,2.6rem)", fontWeight: 900, color: DARK, lineHeight: 1.15, marginBottom: 12 }}>
-                {CONTACT_CONTENT.titleLineOne}<br />
-                <span style={{ color: C }}>{CONTACT_CONTENT.titleAccent}</span>
+                {contactContent.titleLineOne}<br />
+                <span style={{ color: C }}>{contactContent.titleAccent}</span>
               </h2>
               <p style={{ color: GRAY, fontSize: 14, lineHeight: 1.8, marginBottom: 28, fontWeight: 500 }}>
-                {CONTACT_CONTENT.body}
+                {contactContent.body}
               </p>
               {/* Primary phone CTA */}
               <a href={BUSINESS_INFO.phoneHref} style={{ display: "flex", alignItems: "center", gap: 14, background: C, borderRadius: 8, padding: "18px 22px", textDecoration: "none", marginBottom: 28 }}>
@@ -437,12 +498,12 @@ function Home() {
                   <Phone size={18} color="#fff" />
                 </div>
                 <div>
-                  <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", margin: "0 0 2px" }}>{BUSINESS_INFO.availabilityLabel}</p>
-                  <p style={{ color: "#fff", fontWeight: 800, fontSize: 20, margin: 0 }}>{BUSINESS_INFO.phoneDisplay}</p>
+                  <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", margin: "0 0 2px" }}>{businessInfo.availabilityLabel}</p>
+                  <p style={{ color: "#fff", fontWeight: 800, fontSize: 20, margin: 0 }}>{businessInfo.phoneDisplay}</p>
                 </div>
               </a>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {CONTACT_METHODS.map(({ icon: Icon, value, sub }) => (
+                {contactMethods.map(({ icon: Icon, value, sub }) => (
                   <div key={value} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
                     <div style={{ width: 36, height: 36, borderRadius: 8, background: C + "22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Icon size={15} color={C} />
@@ -457,12 +518,12 @@ function Home() {
               {/* Social links */}
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 28, paddingTop: 24, borderTop: `1px solid ${BORDER}` }}>
                 <span style={{ color: GRAY, fontSize: 13, fontWeight: 600 }}>Follow us:</span>
-                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer"
+                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"
                   style={{ width: 36, height: 36, borderRadius: "50%", background: C + "15", border: `1px solid ${C}40`, display: "flex", alignItems: "center", justifyContent: "center", color: C, textDecoration: "none", transition: "background 0.2s" }}
                   onMouseEnter={e => e.currentTarget.style.background = C + "30"} onMouseLeave={e => e.currentTarget.style.background = C + "15"}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
                 </a>
-                <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer"
+                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"
                   style={{ width: 36, height: 36, borderRadius: "50%", background: C + "15", border: `1px solid ${C}40`, display: "flex", alignItems: "center", justifyContent: "center", color: C, textDecoration: "none", transition: "background 0.2s" }}
                   onMouseEnter={e => e.currentTarget.style.background = C + "30"} onMouseLeave={e => e.currentTarget.style.background = C + "15"}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
@@ -475,13 +536,13 @@ function Home() {
                 {submitted ? (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 14, padding: "48px 0" }}>
                     <CheckCircle size={48} color={C} />
-                    <h3 style={{ color: DARK, fontWeight: 800, fontSize: 20, margin: 0 }}>{CONTACT_CONTENT.successTitle}</h3>
-                    <p style={{ color: GRAY, margin: 0 }}>{CONTACT_CONTENT.successBody}</p>
-                    <button onClick={() => setSubmitted(false)} style={{ background: "none", border: "none", color: C, cursor: "pointer", fontSize: 14, textDecoration: "underline", marginTop: 4, fontWeight: 700 }}>{CONTACT_CONTENT.resendLabel}</button>
+                    <h3 style={{ color: DARK, fontWeight: 800, fontSize: 20, margin: 0 }}>{contactContent.successTitle}</h3>
+                    <p style={{ color: GRAY, margin: 0 }}>{contactContent.successBody}</p>
+                    <button onClick={() => setSubmitted(false)} style={{ background: "none", border: "none", color: C, cursor: "pointer", fontSize: 14, textDecoration: "underline", marginTop: 4, fontWeight: 700 }}>{contactContent.resendLabel}</button>
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                    <h3 style={{ color: DARK, fontWeight: 800, fontSize: 18, margin: "0 0 4px" }}>{CONTACT_CONTENT.formTitle}</h3>
+                    <h3 style={{ color: DARK, fontWeight: 800, fontSize: 18, margin: "0 0 4px" }}>{contactContent.formTitle}</h3>
                     {/* Name */}
                     <div>
                       <label style={{ display: "block", fontSize: 12, fontWeight: 800, color: GRAY, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>Full Name</label>
@@ -512,7 +573,7 @@ function Home() {
                         onChange={e => { setFormData({ ...formData, service: e.target.value }); setErrors(p => ({ ...p, service: "" })); }}
                         style={{ ...inp, borderColor: errors.service ? "#e05a5a" : BORDER }}>
                         <option value="">Select a service...</option>
-                        {SERVICE_OPTIONS.map(option => (<option key={option}>{option}</option>))}
+                        {serviceOptions.map(option => (<option key={option}>{option}</option>))}
                       </select>
                       {errors.service && <p style={{ color: "#e05a5a", fontSize: 12, margin: "4px 0 0" }}>{errors.service}</p>}
                     </div>
@@ -528,7 +589,7 @@ function Home() {
                     {errors.submit && <p style={{ color: "#e05a5a", fontSize: 13, margin: "0 0 4px" }}>{errors.submit}</p>}
                     <button onClick={handleSubmit} disabled={sending}
                       style={{ background: sending ? GRAY : C, color: "#fff", border: "none", borderRadius: 6, padding: "15px 0", fontWeight: 800, fontSize: 15, cursor: sending ? "not-allowed" : "pointer", boxShadow: sending ? "none" : `0 4px 18px ${C}50`, letterSpacing: 0.3, transition: "background 0.2s" }}>
-                      {sending ? CONTACT_CONTENT.sendingLabel : CONTACT_CONTENT.submitLabel}
+                      {sending ? contactContent.sendingLabel : contactContent.submitLabel}
                     </button>
                   </div>
                 )}
@@ -547,13 +608,13 @@ function Home() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <img src={`${BASE}favicon.svg`} alt="" width="30" height="30" />
               <div>
-                <div style={{ color: "#fff", fontWeight: 800, fontSize: 14, letterSpacing: 1.5 }}>{BUSINESS_INFO.brandPrimary}</div>
-                <div style={{ color: C, fontSize: 12, letterSpacing: 3, fontWeight: 700 }}>{BUSINESS_INFO.brandSecondary}</div>
+                <div style={{ color: "#fff", fontWeight: 800, fontSize: 14, letterSpacing: 1.5 }}>{businessInfo.brandPrimary}</div>
+                <div style={{ color: C, fontSize: 12, letterSpacing: 3, fontWeight: 700 }}>{businessInfo.brandSecondary}</div>
               </div>
             </div>
             {/* Nav */}
             <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
-              {NAV_LINKS.map(l => (
+              {navLinks.map(l => (
                 <a key={l} href={`#${l.toLowerCase()}`}
                   style={{ color: "#6b6560", fontSize: 16, textDecoration: "none", transition: "color 0.2s", fontWeight: 600 }}
                   onMouseEnter={e => e.target.style.color = "#fff"} onMouseLeave={e => e.target.style.color = "#6b6560"}>{l}</a>
@@ -561,13 +622,13 @@ function Home() {
             </div>
             {/* Social */}
             <div style={{ display: "flex", gap: 10 }}>
-              <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer"
+              <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"
                 style={{ width: 34, height: 34, borderRadius: "50%", background: "#1877F2", border: "1px solid #1877F2", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none", transition: "background 0.2s, transform 0.2s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "#0f63d8"; e.currentTarget.style.transform = "translateY(-1px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "#1877F2"; e.currentTarget.style.transform = "none"; }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
               </a>
-              <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer"
+              <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"
                 style={{ width: 34, height: 34, borderRadius: "50%", background: "#E1306C", border: "1px solid #E1306C", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none", transition: "background 0.2s, transform 0.2s" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "#c81e59"; e.currentTarget.style.transform = "translateY(-1px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "#E1306C"; e.currentTarget.style.transform = "none"; }}>
@@ -577,8 +638,8 @@ function Home() {
           </div>
           {/* Divider + bottom row */}
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 20, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-            <p style={{ color: "#2f2a25", fontSize: 14, margin: 0, fontWeight: 600 }}>{BUSINESS_INFO.copyright}</p>
-            <p style={{ color: "#2f2a25", fontSize: 14, margin: 0, fontWeight: 600 }}>{BUSINESS_INFO.footerTagline}</p>
+            <p style={{ color: "#2f2a25", fontSize: 14, margin: 0, fontWeight: 600 }}>{businessInfo.copyright}</p>
+            <p style={{ color: "#2f2a25", fontSize: 14, margin: 0, fontWeight: 600 }}>{businessInfo.footerTagline}</p>
           </div>
         </div>
       </footer>
