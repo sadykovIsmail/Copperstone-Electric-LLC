@@ -98,6 +98,7 @@ function Home() {
   const [scrolled, setScrolled]   = useState(false);
   const [projects, setProjects]   = useState(PROJECTS);
   const previewDraftMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("previewDraft") === "1";
+  const previewSection = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("previewSection") : null;
   const [siteDraft, setSiteDraft]  = useState(() => createDefaultSiteContent());
   const [formData, setFormData]   = useState({ name: "", email: "", phone: "", service: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
@@ -186,6 +187,20 @@ function Home() {
       window.removeEventListener(PUBLISH_EVENT, syncPublishedContent);
     };
   }, [previewDraftMode]);
+
+  useEffect(() => {
+    if (!previewDraftMode || !previewSection) return;
+
+    const scrollToSection = () => {
+      const target = document.getElementById(previewSection);
+      if (target) {
+        target.scrollIntoView({ block: "start", behavior: "auto" });
+      }
+    };
+
+    const animationFrame = window.requestAnimationFrame(scrollToSection);
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [previewDraftMode, previewSection]);
 
   const formatPhone = (val) => {
     const d = val.replace(/\D/g, "").slice(0, 10);
@@ -283,7 +298,7 @@ function Home() {
       </nav>
 
       {/* HERO - /tools.jpg (1920x1080) slow Ken Burns zoom on load */}
-      <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden" }}>
+      <section id="hero" style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden" }}>
         <div style={{
           position: "absolute", inset: 0,
           backgroundImage: `url(${BASE}tools.jpg)`,
@@ -323,7 +338,7 @@ function Home() {
       </section>
 
       {/* â”€â”€ BENEFITS â”€â”€ */}
-      <section style={{ background: BG, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: "64px 32px" }}>
+      <section id="benefits" style={{ background: BG, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: "64px 32px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 40 }} className="benefits-grid">
           {benefits.map(({ title, desc }, i) => (
             <FadeIn key={title} delay={i * 100}>

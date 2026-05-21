@@ -134,6 +134,17 @@ export default function SiteContentManager() {
 
   const sectionCount = useMemo(() => Object.keys(createDefaultSiteContent()).length, []);
   const gridCols = (columns) => (isCompact ? "1fr" : columns);
+  const previewSectionMap = {
+    hero: "hero",
+    business: "hero",
+    benefits: "benefits",
+    services: "services",
+    about: "about",
+    testimonials: "testimonials",
+    contact: "contact",
+    lists: "contact",
+  };
+  const previewSection = previewSectionMap[activeSection] ?? "hero";
   const layoutStyle = isCompact
     ? { display: "grid", gridTemplateColumns: "1fr", gridTemplateAreas: '"preview" "editor"', gap: 22, alignItems: "start" }
     : { display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 22, alignItems: "start" };
@@ -529,7 +540,7 @@ export default function SiteContentManager() {
           </div>
           <iframe
             title="Copperstone homepage preview"
-            src="/?previewDraft=1"
+            src={`/?previewDraft=1&previewSection=${previewSection}`}
             style={{ width: "100%", height: isCompact ? 150 : "78vh", minHeight: isCompact ? 150 : 720, border: "1px solid #ddd", borderRadius: 10, background: "#fff" }}
           />
         </div>
