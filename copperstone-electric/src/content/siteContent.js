@@ -63,9 +63,39 @@ export const SERVICES = [
 ];
 
 export const PROJECTS = [
-  { title: "Commercial Panel Upgrade", type: "Industrial - Houston, TX", image: "tools.jpg" },
-  { title: "Tenant Build-Out Wiring", type: "Retail - Dallas, TX", image: "feature.jpg" },
-  { title: "Full Facility Rewire", type: "Commercial - Austin, TX", image: "tools.jpg" },
+  {
+    slug: "commercial-panel-upgrade",
+    title: "Commercial Panel Upgrade",
+    projectType: "Industrial",
+    location: "Houston, TX",
+    summary: "Service upgrade and distribution work for a commercial facility expansion.",
+    imagePath: "tools.jpg",
+    imageAlt: "Electrician working on a commercial panel upgrade",
+    isFeatured: true,
+    sortOrder: 1,
+  },
+  {
+    slug: "tenant-build-out-wiring",
+    title: "Tenant Build-Out Wiring",
+    projectType: "Retail",
+    location: "Dallas, TX",
+    summary: "New wiring, lighting, and finish-out support for a retail tenant space.",
+    imagePath: "feature.jpg",
+    imageAlt: "Retail electrical build-out with finished lighting and wiring",
+    isFeatured: true,
+    sortOrder: 2,
+  },
+  {
+    slug: "full-facility-rewire",
+    title: "Full Facility Rewire",
+    projectType: "Commercial",
+    location: "Austin, TX",
+    summary: "Full-system rewire for an occupied commercial property with phased execution.",
+    imagePath: "tools.jpg",
+    imageAlt: "Commercial electrical tools staged for a full facility rewire",
+    isFeatured: true,
+    sortOrder: 3,
+  },
 ];
 
 export const PROJECTS_NOTE = "Add your own project photos any time to replace these placeholders and showcase recent commercial work.";
