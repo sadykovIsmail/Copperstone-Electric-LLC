@@ -1,6 +1,8 @@
 ﻿import { useState, useEffect, useRef } from "react";
 import emailjs from "@emailjs/browser";
 import { Phone, Mail, MapPin, Menu, X, Star, ArrowRight, CheckCircle } from "lucide-react";
+import { HashRouter, Routes, Route } from "react-router-dom";
+import Admin from "./pages/Admin.jsx";
 import {
   ABOUT_CONTENT,
   BENEFITS,
@@ -16,6 +18,7 @@ import {
   SOCIAL_LINKS,
   TESTIMONIALS,
 } from "./content/siteContent";
+import { fetchFeaturedProjects } from "./lib/projects";
 
 // Correct image path for both dev and GitHub Pages deployment
 const BASE   = import.meta.env.BASE_URL;  // "/" locally - "/Copperstone-Electric-LLC/" on GitHub Pages
@@ -87,9 +90,10 @@ function WipeLeft({ children, style = {} }) {
 }
 
 // â”€â”€ App â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-export default function App() {
+function Home() {
   const [menuOpen, setMenuOpen]   = useState(false);
   const [scrolled, setScrolled]   = useState(false);
+  const [projects, setProjects]   = useState(PROJECTS);
   const [formData, setFormData]   = useState({ name: "", email: "", phone: "", service: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors]       = useState({});
@@ -99,6 +103,27 @@ export default function App() {
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadProjects = async () => {
+      try {
+        const remoteProjects = await fetchFeaturedProjects();
+        if (!ignore && remoteProjects.length > 0) {
+          setProjects(remoteProjects);
+        }
+      } catch (error) {
+        console.error("Failed to load projects from Supabase.", error);
+      }
+    };
+
+    loadProjects();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const formatPhone = (val) => {
@@ -293,11 +318,11 @@ export default function App() {
             </div>
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }} className="services-grid">
-            {PROJECTS.map((p, i) => (
+            {projects.map((p, i) => (
               <FadeIn key={p.slug} delay={i * 80}>
                 <div style={{ borderRadius: 10, overflow: "hidden", background: "#1a1510", border: "1px solid rgba(255,255,255,0.07)", aspectRatio: "4/3", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 24, position: "relative" }}>
                   <div
-                    style={{ position: "absolute", inset: 0, backgroundImage: `url(${BASE}${p.imagePath})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                    style={{ position: "absolute", inset: 0, backgroundImage: `url(${p.imagePath?.startsWith('http') ? p.imagePath : BASE + p.imagePath})`, backgroundSize: "cover", backgroundPosition: "center" }}
                     aria-hidden="true"
                   />
                   <div style={{ position: "absolute", inset: 0, background: "rgba(10,8,6,0.55)" }} />
@@ -626,3 +651,13 @@ function TestimonialCard({ name, role, quote }) {
   );
 }
 
+export default function App() {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/admin" element={<Admin />} />
+      </Routes>
+    </HashRouter>
+  );
+}
