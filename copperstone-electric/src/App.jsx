@@ -294,13 +294,18 @@ export default function App() {
           </FadeIn>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }} className="services-grid">
             {PROJECTS.map((p, i) => (
-              <FadeIn key={p.title} delay={i * 80}>
+              <FadeIn key={p.slug} delay={i * 80}>
                 <div style={{ borderRadius: 10, overflow: "hidden", background: "#1a1510", border: "1px solid rgba(255,255,255,0.07)", aspectRatio: "4/3", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 24, position: "relative" }}>
-                  <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${BASE}${p.image})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                  <div
+                    style={{ position: "absolute", inset: 0, backgroundImage: `url(${BASE}${p.imagePath})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                    aria-hidden="true"
+                  />
                   <div style={{ position: "absolute", inset: 0, background: "rgba(10,8,6,0.55)" }} />
                   <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${C}20 0%, transparent 62%)` }} />
                   <div style={{ position: "relative" }}>
-                    <p style={{ color: C, fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 6px" }}>{p.type}</p>
+                    <p style={{ color: C, fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", margin: "0 0 6px" }}>
+                      {p.projectType} - {p.location}
+                    </p>
                     <h3 style={{ color: "#fff", fontWeight: 700, fontSize: 15, margin: 0 }}>{p.title}</h3>
                   </div>
                 </div>
