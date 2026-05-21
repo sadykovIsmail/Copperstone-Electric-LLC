@@ -35,6 +35,16 @@ export function createDefaultSiteContent() {
 export function normalizeSiteContent(defaultContent, storedContent) {
   if (!storedContent || typeof storedContent !== "object") return defaultContent;
 
+  const normalizeIconList = (defaultList, storedList) => {
+    if (!Array.isArray(storedList)) return defaultList;
+
+    return storedList.map((item, index) => ({
+      ...defaultList[index],
+      ...item,
+      icon: defaultList[index]?.icon,
+    }));
+  };
+
   return {
     ...defaultContent,
     ...storedContent,
@@ -51,14 +61,14 @@ export function normalizeSiteContent(defaultContent, storedContent) {
       ...(storedContent.hero ?? {}),
     },
     benefits: Array.isArray(storedContent.benefits) ? storedContent.benefits : defaultContent.benefits,
-    services: Array.isArray(storedContent.services) ? storedContent.services : defaultContent.services,
+    services: normalizeIconList(defaultContent.services, storedContent.services),
     about: {
       ...defaultContent.about,
       ...(storedContent.about ?? {}),
       bullets: Array.isArray(storedContent.about?.bullets) ? storedContent.about.bullets : defaultContent.about.bullets,
     },
     testimonials: Array.isArray(storedContent.testimonials) ? storedContent.testimonials : defaultContent.testimonials,
-    contactMethods: Array.isArray(storedContent.contactMethods) ? storedContent.contactMethods : defaultContent.contactMethods,
+    contactMethods: normalizeIconList(defaultContent.contactMethods, storedContent.contactMethods),
     contact: {
       ...defaultContent.contact,
       ...(storedContent.contact ?? {}),
